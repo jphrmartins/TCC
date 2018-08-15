@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "334214215597",
+    "firebase_url": "https://tccfirebaseproject-1d203.firebaseio.com",
+    "project_id": "tccfirebaseproject-1d203",
+    "storage_bucket": "tccfirebaseproject-1d203.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:334214215597:android:76483b274e3deb21",
+        "android_client_info": {
+          "package_name": "br.com.galaga.assistentescompras"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "334214215597-65e63dq0pjho6osc4tt42hj3u83u7u0e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.galaga.assistentescompras",
+            "certificate_hash": "927b398600942c4b7f93c1cabc9c9f0eeaf059d4"
+          }
+        },
+        {
+          "client_id": "334214215597-nvbb7rbets0beitk3ireon9epgg80qri.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtDrSpiIydSU59S7a2JNxipDqZbcWwmr0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "334214215597-nvbb7rbets0beitk3ireon9epgg80qri.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
