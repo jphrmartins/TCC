@@ -2,18 +2,19 @@ package br.com.galaga.assistentescompras
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.*
+import android.support.v7.widget.DividerItemDecoration
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
-import android.widget.LinearLayout
 import br.com.galaga.assistentescompras.adapter.MarketListAdapter
 import br.com.galaga.assistentescompras.adapter.SwipeDelete
-import com.google.firebase.database.*
-
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
@@ -29,12 +30,12 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         val recyclerView = recyclerView
-        recyclerView.adapter = MarketListAdapter(baseContext)
+        recyclerView.adapter = MarketListAdapter(baseContext, { item: Item -> longClickLisnter(item) })
         val layoutManager = LinearLayoutManager(baseContext, LinearLayoutManager.VERTICAL, false)
         recyclerView.layoutManager = layoutManager
         recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
 
-        val swipeHandler = object : SwipeDelete(recyclerView.adapter as MarketListAdapter){
+        val swipeHandler = object : SwipeDelete(recyclerView.adapter as MarketListAdapter) {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
                 val adapter = recyclerView.adapter as MarketListAdapter
                 val user = adapter.itens.get(viewHolder!!.adapterPosition)
@@ -53,7 +54,7 @@ class MainActivity : AppCompatActivity() {
                     counter++
                     item
                 }
-                val adapter = MarketListAdapter(itens, baseContext)
+                val adapter = MarketListAdapter(itens, baseContext, { item: Item -> longClickLisnter(item) })
                 recyclerView.adapter = adapter
             }
 
@@ -67,5 +68,13 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(baseContext, AddProductActivity::class.java)
             startActivity(intent)
         }
+    }
+
+    private fun longClickLisnter(item: Item): Boolean {
+        val intent = Intent(baseContext, AddProductActivity::class.java)
+        val jsonItem = Gson().toJson(item)
+        intent.putExtra("item", jsonItem)
+        startActivity(intent)
+        return true
     }
 }

@@ -11,10 +11,10 @@ import br.com.galaga.assistentescompras.Item
 import br.com.galaga.assistentescompras.R
 import kotlinx.android.synthetic.main.item_component.view.*
 
-class MarketListAdapter(private val context: Context) : Adapter<MarketListAdapter.ViewHolder>() {
+class MarketListAdapter(private val context: Context, val longClickListner: (Item) -> Boolean) : Adapter<MarketListAdapter.ViewHolder>() {
     var itens: List<Item> = listOf()
 
-    constructor(itens: List<Item>, context: Context) : this(context) {
+    constructor(itens: List<Item>, context: Context, longClickListner: (Item) -> Boolean) : this(context, longClickListner) {
         this.itens = itens
     }
 
@@ -30,12 +30,13 @@ class MarketListAdapter(private val context: Context) : Adapter<MarketListAdapte
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = itens[position]
         holder.let {
-            it.bindView(item)
+            it.bindView(item, longClickListner)
         }
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bindView(item: Item) {
+        fun bindView(item: Item, longClickListner: (Item) -> Boolean) {
+            itemView.setOnLongClickListener { longClickListner(item) }
             val title = itemView.txtItemTitle
             val description = itemView.txtItemDescription
             val checkBox = itemView.checkBox
@@ -44,6 +45,9 @@ class MarketListAdapter(private val context: Context) : Adapter<MarketListAdapte
             title.text = item.name
             position.text = item.position
             description.text = item.description
-        }
+            if (item.description != null) {
+                description.visibility = View.VISIBLE
+            }
+                   }
     }
 }

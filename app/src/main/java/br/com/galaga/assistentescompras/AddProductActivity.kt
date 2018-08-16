@@ -5,16 +5,23 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import com.google.firebase.database.FirebaseDatabase
+import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_add_product.*
 
 class AddProductActivity : AppCompatActivity() {
 
     var database = FirebaseDatabase.getInstance()
     val myRef = database.getReference("listaItens")
+    val gson = Gson()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_product)
+        if (intent.hasExtra("item")) {
+            val item = gson.fromJson(intent.getStringExtra("item"), Item::class.java)
+            edtNome.setText(item.name)
+            edtDescricao.setText(item.description)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -25,15 +32,10 @@ class AddProductActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_salvar -> {
-                if (edtNome == null || edtNome.text.trim().isEmpty()) {
-                    edtNome.error = "Adicione um valor ao nome"
+                if (intent.hasExtra("item")) {
+                    updateItem(intent.getStringExtra("item"))
                 } else {
-                    if (edtNome.text.length >= 15) {
-                        edtNome.error = "Nome deve ter um tamnho menor que 10 caracteres"
-                    } else {
-                        saveItem(createItem())
-                        finish()
-                    }
+                    addItem()
                 }
                 true
             }
@@ -41,15 +43,51 @@ class AddProductActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateItem(jsonItem: String) {
+        val item = gson.fromJson(jsonItem, Item::class.java)
+        if (!validadeEdtNome()) {
+            edtNome.error = "Adicione um valor a nome de até 15 caracteres"
+        } else {
+            item.name = getTextEdtName()
+            item.description = getTextDescription()
+            item.position = null
+            myRef.updateChildren(mapOf<String, Item>(item.uuid to item))
+            finish()
+        }
+    }
+
+    private fun addItem() {
+        if (!validadeEdtNome()) {
+            edtNome.error = "Adicione um valor a nome de até 15 caracteres"
+        } else {
+            saveItem(createItem())
+            finish()
+        }
+    }
+
     private fun createItem(): Item {
-        val nome = edtNome.text.toString().trim().capitalize()
-        val description = edtDescricao.text.toString().trim().capitalize()
+        val nome = getTextEdtName()
+        val description = getTextDescription()
         return Item(nome, description)
     }
 
+    private fun getTextDescription(): String? {
+        val text = edtDescricao.text.toString().trim().capitalize()
+        if (!text.isEmpty())
+            return text
+        return null
+    }
+
+    private fun getTextEdtName() = edtNome.text.toString().trim().capitalize()
+
     private fun saveItem(item: Item) {
-        val uuid = myRef.push().key
-        item.uuid = uuid
-        myRef.child(uuid).setValue(item)
+        myRef.push().key?.let {
+            item.uuid = it
+            myRef.child(it).setValue(item)
+        }
+    }
+
+    private fun validadeEdtNome(): Boolean {
+        return edtNome.text.trim().isEmpty() || edtNome.text.toString().length < 16
     }
 }
