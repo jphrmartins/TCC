@@ -9,7 +9,7 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.Log
 import br.com.galaga.assistentescompras.adapter.MarketListAdapter
-import br.com.galaga.assistentescompras.adapter.SwipeDelete
+import br.com.galaga.assistentescompras.adapter.SwipeHandler
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -23,19 +23,22 @@ class MainActivity : AppCompatActivity() {
 
     var database = FirebaseDatabase.getInstance()
     val myRef = database.getReference("listaItens")
+    lateinit var adapter : MarketListAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
+        this.adapter = MarketListAdapter(baseContext, { item: Item -> longClickLisnter(item) })
+
         val recyclerView = recyclerView
-        recyclerView.adapter = MarketListAdapter(baseContext, { item: Item -> longClickLisnter(item) })
+        recyclerView.adapter = adapter
         val layoutManager = LinearLayoutManager(baseContext, LinearLayoutManager.VERTICAL, false)
         recyclerView.layoutManager = layoutManager
         recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
 
-        val swipeHandler = object : SwipeDelete(recyclerView.adapter as MarketListAdapter) {
+        val swipeHandler = object : SwipeHandler(recyclerView.adapter as MarketListAdapter) {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
                 val adapter = recyclerView.adapter as MarketListAdapter
                 val user = adapter.itens.get(viewHolder!!.adapterPosition)
@@ -54,8 +57,8 @@ class MainActivity : AppCompatActivity() {
                     counter++
                     item
                 }
-                val adapter = MarketListAdapter(itens, baseContext, { item: Item -> longClickLisnter(item) })
-                recyclerView.adapter = adapter
+                adapter.itens = itens
+                adapter.notifyDataSetChanged()
             }
 
             override fun onCancelled(error: DatabaseError) {

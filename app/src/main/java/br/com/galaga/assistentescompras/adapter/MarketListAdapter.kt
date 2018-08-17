@@ -45,9 +45,7 @@ class MarketListAdapter(private val context: Context, val longClickListner: (Ite
             title.text = item.name
             position.text = item.position
             description.text = item.description
-            if (item.description != null) {
-                description.visibility = View.VISIBLE
-            }
-                   }
+            description.visibility = if (item.description != null) View.VISIBLE else View.GONE
+        }
     }
 }
