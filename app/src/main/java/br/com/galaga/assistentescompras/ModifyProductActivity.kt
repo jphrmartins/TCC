@@ -6,9 +6,9 @@ import android.view.Menu
 import android.view.MenuItem
 import com.google.firebase.database.FirebaseDatabase
 import com.google.gson.Gson
-import kotlinx.android.synthetic.main.activity_add_product.*
+import kotlinx.android.synthetic.main.activity_modify_product.*
 
-class AddProductActivity : AppCompatActivity() {
+class ModifyProductActivity : AppCompatActivity() {
 
     var database = FirebaseDatabase.getInstance()
     val myRef = database.getReference("listaItens")
@@ -16,7 +16,7 @@ class AddProductActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_add_product)
+        setContentView(R.layout.activity_modify_product)
         if (intent.hasExtra("item")) {
             val item = gson.fromJson(intent.getStringExtra("item"), Item::class.java)
             edtNome.setText(item.name)

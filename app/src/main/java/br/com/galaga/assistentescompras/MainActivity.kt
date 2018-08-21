@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity() {
 
     var database = FirebaseDatabase.getInstance()
     val myRef = database.getReference("listaItens")
-    lateinit var adapter : MarketListAdapter
+    lateinit var adapter: MarketListAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,9 +40,11 @@ class MainActivity : AppCompatActivity() {
 
         val swipeHandler = object : SwipeHandler(recyclerView.adapter as MarketListAdapter) {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
-                val adapter = recyclerView.adapter as MarketListAdapter
-                val user = adapter.itens.get(viewHolder!!.adapterPosition)
-                myRef.child(user.uuid).removeValue()
+                if (direction == ItemTouchHelper.LEFT) {
+                    removeItem(viewHolder)
+                } else if (direction == ItemTouchHelper.RIGHT) {
+                    checkItem(viewHolder)
+                }
             }
         }
         val itemTouchHelper = ItemTouchHelper(swipeHandler)
@@ -56,7 +58,7 @@ class MainActivity : AppCompatActivity() {
                     item?.position = "$counter -"
                     counter++
                     item
-                }
+                }.sorted()
                 adapter.itens = itens
                 adapter.notifyDataSetChanged()
             }
@@ -68,13 +70,25 @@ class MainActivity : AppCompatActivity() {
         })
 
         fab.setOnClickListener { view ->
-            val intent = Intent(baseContext, AddProductActivity::class.java)
+            val intent = Intent(baseContext, ModifyProductActivity::class.java)
             startActivity(intent)
         }
     }
 
+    private fun checkItem(viewHolder: RecyclerView.ViewHolder?) {
+        val item = adapter.itens.get(viewHolder!!.adapterPosition)
+        item.checked = !item.checked
+        myRef.updateChildren(mapOf<String, Item>(item.uuid to item))
+
+    }
+
+    private fun removeItem(viewHolder: RecyclerView.ViewHolder?) {
+        val item = adapter.itens.get(viewHolder!!.adapterPosition)
+        myRef.child(item.uuid).removeValue()
+    }
+
     private fun longClickLisnter(item: Item): Boolean {
-        val intent = Intent(baseContext, AddProductActivity::class.java)
+        val intent = Intent(baseContext, ModifyProductActivity::class.java)
         val jsonItem = Gson().toJson(item)
         intent.putExtra("item", jsonItem)
         startActivity(intent)
