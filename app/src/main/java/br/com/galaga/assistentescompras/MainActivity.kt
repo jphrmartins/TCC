@@ -17,6 +17,8 @@ import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import kotlinx.android.synthetic.main.item_component.*
+import java.util.stream.Collectors
 
 
 class MainActivity : AppCompatActivity() {
@@ -30,7 +32,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        this.adapter = MarketListAdapter(baseContext, { item: Item -> longClickLisnter(item) })
+
+        this.adapter = MarketListAdapter(baseContext, { item: Item -> checkItem(item) }, { item: Item -> longClickLisnter(item) })
 
         val recyclerView = recyclerView
         recyclerView.adapter = adapter
@@ -40,11 +43,7 @@ class MainActivity : AppCompatActivity() {
 
         val swipeHandler = object : SwipeHandler(recyclerView.adapter as MarketListAdapter) {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
-                if (direction == ItemTouchHelper.LEFT) {
-                    removeItem(viewHolder)
-                } else if (direction == ItemTouchHelper.RIGHT) {
-                    checkItem(viewHolder)
-                }
+                removeItem(viewHolder)
             }
         }
         val itemTouchHelper = ItemTouchHelper(swipeHandler)
@@ -53,14 +52,15 @@ class MainActivity : AppCompatActivity() {
         myRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 var counter = 1
-                val itens = dataSnapshot.children.mapNotNull {
-                    val item = it.getValue(Item::class.java)
-                    item?.position = "$counter -"
-                    counter++
-                    item
-                }.sorted()
-                adapter.itens = itens
-                adapter.notifyDataSetChanged()
+                adapter.let {
+                    it.itens = dataSnapshot.children.mapNotNull {
+                        it.getValue(Item::class.java)?.let {
+                            it.position = counter++
+                            it
+                        }
+                    }.sorted()
+                    it.notifyDataSetChanged()
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -75,9 +75,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkItem(viewHolder: RecyclerView.ViewHolder?) {
-        val item = adapter.itens.get(viewHolder!!.adapterPosition)
+    private fun checkItem(item: Item) {
         item.checked = !item.checked
+        item.position = null
         myRef.updateChildren(mapOf<String, Item>(item.uuid to item))
 
     }
@@ -93,5 +93,9 @@ class MainActivity : AppCompatActivity() {
         intent.putExtra("item", jsonItem)
         startActivity(intent)
         return true
+    }
+
+    private fun bla() {
+        val map = mapOf("bla" to { item: Item -> longClickLisnter(item) }, "bal2" to {})
     }
 }

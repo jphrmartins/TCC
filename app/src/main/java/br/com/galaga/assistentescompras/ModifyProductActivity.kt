@@ -4,27 +4,57 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import br.com.galaga.assistentescompras.R.id.*
+import br.com.galaga.assistentescompras.R.string.salvar
 import com.google.firebase.database.FirebaseDatabase
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_modify_product.*
 
 class ModifyProductActivity : AppCompatActivity() {
-
-    var database = FirebaseDatabase.getInstance()
-    val myRef = database.getReference("listaItens")
-    val gson = Gson()
+    private val database = FirebaseDatabase.getInstance()
+    private val myRef = database.getReference("listaItens")
+    private val gson = Gson()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_modify_product)
+        createSpinner()
+        //edtPrice.visibility = View.GONE
         if (intent.hasExtra("item")) {
             val item = gson.fromJson(intent.getStringExtra("item"), Item::class.java)
             edtNome.setText(item.name)
-            edtDescricao.setText(item.description)
+            edtDescription.setText(item.description)
+        }
+    }
+
+    private fun createSpinner() {
+        val list = (1..100)
+                .map {
+                    it.toString()
+                }.toMutableList()
+        list.add(0, "Quantidade")
+        spinner.adapter = ArrayAdapter(baseContext, android.R.layout.simple_spinner_dropdown_item, list.toList())
+        spinner.setOnItemSelectedListener(itemSelected())
+    }
+
+    private fun itemSelected(): AdapterView.OnItemSelectedListener {
+        return object : AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+
+            }
+
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+
+            }
+
         }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        intent
         menuInflater.inflate(R.menu.menu_salvar, menu)
         return true
     }
@@ -72,7 +102,7 @@ class ModifyProductActivity : AppCompatActivity() {
     }
 
     private fun getTextDescription(): String? {
-        val text = edtDescricao.text.toString().trim().capitalize()
+        val text = edtDescription.text.toString().trim().capitalize()
         if (!text.isEmpty())
             return text
         return null
@@ -88,6 +118,6 @@ class ModifyProductActivity : AppCompatActivity() {
     }
 
     private fun validadeEdtNome(): Boolean {
-        return edtNome.text.trim().isEmpty() || edtNome.text.toString().length < 16
+        return if (!edtNome.text.trim().isEmpty()) edtNome.text.toString().length < 16 else false
     }
 }
