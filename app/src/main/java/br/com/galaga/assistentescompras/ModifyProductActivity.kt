@@ -36,6 +36,7 @@ class ModifyProductActivity : AppCompatActivity() {
     private val storageReference = FirebaseStorage.getInstance().getReference()
     private val myRef = database.getReference("listaItens")
     private val gson = Gson()
+    private var downloadUri: Task<Uri>? = null
     private var currentPath: String? = null
 
 
@@ -114,7 +115,19 @@ class ModifyProductActivity : AppCompatActivity() {
     private fun createItem(): Item {
         val nome = getTextEdtName()
         val description = getTextDescription()
-        return Item(nome, description)
+        val imageUri = getImageUri()
+        return Item(nome, description, imageUri)
+    }
+
+    private fun getImageUri(): Uri? {
+        if (this.downloadUri != null) {
+            if (!this.downloadUri?.isComplete!!) {
+                Toast.makeText(baseContext, "Salvando imagem, por favor aguarde...",
+                        Toast.LENGTH_LONG).show()
+            }
+            return Tasks.await(downloadUri!!)
+        }
+        return null
     }
 
     private fun getTextDescription(): String? {
@@ -184,13 +197,12 @@ class ModifyProductActivity : AppCompatActivity() {
     }
 
     private fun uploadToFirebase(storage: StorageReference, photoUri: Uri) {
-        val url = storage.putFile(photoUri).continueWithTask { taskSnapshot ->
+        downloadUri = storage.putFile(photoUri).continueWithTask { taskSnapshot ->
             if (!taskSnapshot.isSuccessful) {
                 throw taskSnapshot.exception!!
             }
             return@continueWithTask storage.downloadUrl
         }
-        val downloadUrl = Tasks.await(url)
 
     }
 }
