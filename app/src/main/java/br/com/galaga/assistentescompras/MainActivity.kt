@@ -10,18 +10,25 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.Log
 import br.com.galaga.assistentescompras.adapter.MarketListAdapter
 import br.com.galaga.assistentescompras.adapter.SwipeHandler
+import br.com.galaga.assistentescompras.permission.manager.PermissionAsker
+import br.com.galaga.assistentescompras.permission.manager.permissions.CameraPermissions
+import br.com.galaga.assistentescompras.permission.manager.permissions.InternetPermissions
+import br.com.galaga.assistentescompras.permission.manager.permissions.StoragePermissions
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import kotlinx.android.synthetic.main.item_component.*
-import java.util.stream.Collectors
 
 
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        val CAMERA_PERMISSION_CODE = 0
+        val INTERNET_PERMISSION_CODE = 1
+        val STORAGE_PERMISSION_CODE = 2
+    }
 
     var database = FirebaseDatabase.getInstance()
     val myRef = database.getReference("listaItens")
@@ -31,9 +38,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-
-
-        this.adapter = MarketListAdapter(baseContext, { item: Item -> checkItem(item) }, { item: Item -> longClickLisnter(item) })
+        askPermissions()
+        this.adapter = MarketListAdapter(baseContext)
 
         val recyclerView = recyclerView
         recyclerView.adapter = adapter
@@ -41,7 +47,7 @@ class MainActivity : AppCompatActivity() {
         recyclerView.layoutManager = layoutManager
         recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
 
-        val swipeHandler = object : SwipeHandler(recyclerView.adapter as MarketListAdapter) {
+        val swipeHandler = object : SwipeHandler() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
                 removeItem(viewHolder)
             }
@@ -75,27 +81,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkItem(item: Item) {
-        item.checked = !item.checked
-        item.position = null
-        myRef.updateChildren(mapOf<String, Item>(item.uuid to item))
-
+    private fun askPermissions() {
+        PermissionAsker(listOf(
+                CameraPermissions(CAMERA_PERMISSION_CODE, this, baseContext),
+                InternetPermissions(INTERNET_PERMISSION_CODE, this, baseContext),
+                StoragePermissions(STORAGE_PERMISSION_CODE, this, baseContext)
+        )).askPermitions()
     }
 
     private fun removeItem(viewHolder: RecyclerView.ViewHolder?) {
         val item = adapter.itens.get(viewHolder!!.adapterPosition)
         myRef.child(item.uuid).removeValue()
-    }
-
-    private fun longClickLisnter(item: Item): Boolean {
-        val intent = Intent(baseContext, ModifyProductActivity::class.java)
-        val jsonItem = Gson().toJson(item)
-        intent.putExtra("item", jsonItem)
-        startActivity(intent)
-        return true
-    }
-
-    private fun bla() {
-        val map = mapOf("bla" to { item: Item -> longClickLisnter(item) }, "bal2" to {})
     }
 }
