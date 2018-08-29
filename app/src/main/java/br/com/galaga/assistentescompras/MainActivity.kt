@@ -1,6 +1,7 @@
 package br.com.galaga.assistentescompras
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
@@ -14,12 +15,15 @@ import br.com.galaga.assistentescompras.permission.manager.PermissionAsker
 import br.com.galaga.assistentescompras.permission.manager.permissions.CameraPermissions
 import br.com.galaga.assistentescompras.permission.manager.permissions.InternetPermissions
 import br.com.galaga.assistentescompras.permission.manager.permissions.StoragePermissions
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import org.jetbrains.anko.doAsync
 
 
 class MainActivity : AppCompatActivity() {
@@ -32,6 +36,7 @@ class MainActivity : AppCompatActivity() {
 
     var database = FirebaseDatabase.getInstance()
     val myRef = database.getReference("listaItens")
+    val myStorage = FirebaseStorage.getInstance().getReference()
     lateinit var adapter: MarketListAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,6 +96,22 @@ class MainActivity : AppCompatActivity() {
 
     private fun removeItem(viewHolder: RecyclerView.ViewHolder?) {
         val item = adapter.itens.get(viewHolder!!.adapterPosition)
+        doAsync { deleteImage(item.imageUri) }
         myRef.child(item.uuid).removeValue()
+    }
+
+    private fun deleteImage(stringUri: String?) {
+        if (stringUri != null) {
+            Log.i("StorageURi", stringUri)
+            val photoName = Uri.parse(stringUri).lastPathSegment
+            Log.i("lastPath", photoName)
+            val deleteTask = myStorage.child(photoName).delete().continueWithTask {
+                if (!it.isSuccessful) {
+                    throw it.exception!!
+                }
+                return@continueWithTask it
+            }
+            Tasks.await(deleteTask)
+        }
     }
 }

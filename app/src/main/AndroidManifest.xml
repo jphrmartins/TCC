@@ -26,7 +26,8 @@
         <activity
             android:name=".ModifyProductActivity"
             android:label="Adicionar Produto"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="br.com.galaga.assistentescompras.MainActivity" />

@@ -38,15 +38,16 @@ class MarketListAdapter(private val context: Context) : Adapter<MarketListAdapte
     }
 
     private fun checkItem(item: Item) {
-        item.checked = !item.checked
-        item.position = null
-        myRef.updateChildren(mapOf<String, Item>(item.uuid to item))
+        val intent = Intent(context, ModifyProductActivity::class.java)
+        val jsonItem = Gson().toJson(item)
+        intent.putExtra("itemSelected", jsonItem)
+        startActivity(context, intent, null)
     }
 
     private fun longClickListner(item: Item): Boolean {
         val intent = Intent(context, ModifyProductActivity::class.java)
         val jsonItem = Gson().toJson(item)
-        intent.putExtra("item", jsonItem)
+        intent.putExtra("itemUpdate", jsonItem)
         startActivity(context, intent, null)
         return true
     }
