@@ -37,37 +37,12 @@ class MarketListAdapter(private val activity: Activity) : Adapter<MarketListAdap
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = itens[position]
         holder.let {
-            it.bindView(activity.baseContext, item, { longClickListner(item) }, { checkItem(item) })
+            it.bindView(activity.baseContext, item)
         }
     }
 
-    private fun checkItem(item: Item) {
-        val intent = Intent(activity.baseContext, ModifyProductActivity::class.java)
-        if (!item.checked) {
-            val jsonItem = Gson().toJson(item)
-            intent.putExtra("itemSelected", jsonItem)
-            activity.startActivity(intent)
-        } else {
-            item.checked = !item.checked
-            item.price = null
-            item.quantity = null
-            myRef.updateChildren(mapOf(item.uuid to item))
-        }
-    }
-
-    private fun longClickListner(item: Item): Boolean {
-        val intent = Intent(activity.baseContext, ModifyProductActivity::class.java)
-        val jsonItem = Gson().toJson(item)
-        intent.putExtra("itemUpdate", jsonItem)
-        activity.startActivity(intent)
-        return true
-    }
-
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bindView(baseContext: Context,
-                     item: Item,
-                     longClickListner: (Item) -> Boolean,
-                     onCheckItem: (Item) -> Unit) {
+    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        fun bindView(baseContext: Context, item: Item) {
             itemView.setOnLongClickListener { longClickListner(item) }
 
             val title = itemView.txtItemTitle
@@ -94,6 +69,28 @@ class MarketListAdapter(private val activity: Activity) : Adapter<MarketListAdap
 
         private fun formatPosition(position: Int?): CharSequence? {
             return "$position -"
+        }
+
+        private fun onCheckItem(item: Item) {
+            val intent = Intent(activity.baseContext, ModifyProductActivity::class.java)
+            if (!item.checked) {
+                val jsonItem = Gson().toJson(item)
+                intent.putExtra("itemSelected", jsonItem)
+                activity.startActivity(intent)
+            } else {
+                item.checked = !item.checked
+                item.price = null
+                item.quantity = null
+                myRef.updateChildren(mapOf(item.uuid to item))
+            }
+        }
+
+        private fun longClickListner(item: Item): Boolean {
+            val intent = Intent(activity.baseContext, ModifyProductActivity::class.java)
+            val jsonItem = Gson().toJson(item)
+            intent.putExtra("itemUpdate", jsonItem)
+            activity.startActivity(intent)
+            return true
         }
     }
 }

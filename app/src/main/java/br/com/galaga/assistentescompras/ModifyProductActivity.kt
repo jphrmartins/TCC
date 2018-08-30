@@ -111,6 +111,10 @@ class ModifyProductActivity : AppCompatActivity() {
         }
     }
 
+    override fun onBackPressed() {
+        finish()
+    }
+
     private fun takeItem(jsonItem: String) {
         val item = gson.fromJson(jsonItem, Item::class.java)
         val isValuesValid = validadeValues()
@@ -244,7 +248,7 @@ class ModifyProductActivity : AppCompatActivity() {
         if (requestCode == CAMERA_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             val file = File(currentPath)
             val uri = Uri.fromFile(file)
-            genereteSnackbar("Salando imagem, por favor, aguarde", Snackbar.LENGTH_LONG)
+            genereteSnackbar("Salvando imagem, por favor, aguarde", Snackbar.LENGTH_LONG)
             val storage = storageReference.child("fotos").child(uri.lastPathSegment)
             doAsync {
                 uploadToFirestore(storage, uri)
@@ -267,7 +271,7 @@ class ModifyProductActivity : AppCompatActivity() {
     }
 
     private fun genereteSnackbar(text: String, snackbarTimer: Int) {
-        Snackbar.make(window.decorView.rootView, text,
-                snackbarTimer).show()
+        val view = this.findViewById<View>(R.id.constraintLayout)
+        Snackbar.make(view, text, snackbarTimer).show()
     }
 }
