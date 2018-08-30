@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.support.design.widget.Snackbar
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -52,15 +53,22 @@ class ModifyProductActivity : AppCompatActivity() {
         edtPrice.visibility = View.GONE
         if (intent.hasExtra("itemUpdate")) {
             val item = gson.fromJson(intent.getStringExtra("itemUpdate"), Item::class.java)
+            loadImageIfContainsUrl(item)
             edtNome.setText(item.name)
             edtDescription.setText(item.description)
         } else if (intent.hasExtra("itemSelected")) {
             val item = gson.fromJson(intent.getStringExtra("itemSelected"), Item::class.java)
+            loadImageIfContainsUrl(item)
             edtNome.setText(item.name)
             edtDescription.setText(item.description)
             spinner.visibility = View.VISIBLE
             edtPrice.visibility = View.VISIBLE
         }
+    }
+
+    private fun loadImageIfContainsUrl(item: Item?) {
+        if (item?.imageUri != null)
+            Glide.with(baseContext).load(item.imageUri).into(image)
     }
 
     private fun createSpinner() {
@@ -105,10 +113,31 @@ class ModifyProductActivity : AppCompatActivity() {
 
     private fun takeItem(jsonItem: String) {
         val item = gson.fromJson(jsonItem, Item::class.java)
+        val isValuesValid = validadeValues()
+        if (isValuesValid) {
+            item.price = edtPrice.text.toString().toDouble()
+            item.quantity = qtdSelected
+            item.checked = !item.checked
+            myRef.updateChildren(mapOf(item.uuid to item))
+            finish()
+        }
     }
 
     private fun validadeValues(): Boolean {
-        return qtdSelected != null || edtPrice.text.toString().trim().isEmpty()
+        var valid = true
+        if (qtdSelected == null) {
+            genereteSnackbar("Coloque um valor na quantidade", Snackbar.LENGTH_LONG)
+            valid = false
+        }
+        if (edtPrice.text.toString().trim().isEmpty()) {
+            edtPrice.error = "Por favor, insira um valor válido no preço"
+            valid = false
+        }
+        if (!edtPrice.text.trim().toString().isEmpty() && edtPrice.text.toString().toDouble() <= 0) {
+            edtPrice.error = "Insira um valor maior que zero"
+            valid = false
+        }
+        return valid
     }
 
     private fun updateItem(jsonItem: String) {
@@ -119,8 +148,18 @@ class ModifyProductActivity : AppCompatActivity() {
             item.name = getTextEdtName()
             item.description = getTextDescription()
             item.position = null
-            myRef.updateChildren(mapOf<String, Item>(item.uuid to item))
-            finish()
+            if (this.downloadUri != null) {
+                if (!this.downloadUri?.isComplete!!) {
+                    genereteSnackbar("Salvando imagem, por favor aguarde...", Snackbar.LENGTH_LONG)
+                } else {
+                    item.imageUri = this.resultUri.toString()
+                    myRef.updateChildren(mapOf<String, Item>(item.uuid to item))
+                    finish()
+                }
+            } else {
+                myRef.updateChildren(mapOf<String, Item>(item.uuid to item))
+                finish()
+            }
         }
     }
 
@@ -130,8 +169,7 @@ class ModifyProductActivity : AppCompatActivity() {
         } else {
             if (this.downloadUri != null) {
                 if (!this.downloadUri?.isComplete!!) {
-                    Toast.makeText(baseContext, "Salvando imagem, por favor aguarde...",
-                            Toast.LENGTH_LONG).show()
+                    genereteSnackbar("Salvando imagem, por favor aguarde...", Snackbar.LENGTH_LONG)
                 } else {
                     saveItem(createItem())
                     finish()
@@ -206,8 +244,7 @@ class ModifyProductActivity : AppCompatActivity() {
         if (requestCode == CAMERA_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             val file = File(currentPath)
             val uri = Uri.fromFile(file)
-            val bitmap = genererateThumbnail(file)
-            Toast.makeText(baseContext, "Uploading Image, please Wait", Toast.LENGTH_LONG).show()
+            genereteSnackbar("Salando imagem, por favor, aguarde", Snackbar.LENGTH_LONG)
             val storage = storageReference.child("fotos").child(uri.lastPathSegment)
             doAsync {
                 uploadToFirestore(storage, uri)
@@ -217,21 +254,20 @@ class ModifyProductActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
     }
 
-    private fun genererateThumbnail(file: File): Bitmap {
-        return BitmapFactory.decodeFile(file.absolutePath)
-    }
-
     private fun uploadToFirestore(storage: StorageReference, photoUri: Uri) {
-        Log.i("URL", "inicio do envio1")
         downloadUri = storage.putFile(photoUri).continueWithTask { taskSnapshot ->
             if (!taskSnapshot.isSuccessful) {
                 throw taskSnapshot.exception!!
             }
-            Log.i("URL", "inicio do envio3")
             return@continueWithTask storage.downloadUrl
         }
-        Log.i("URL", "inicio do envio2")
         resultUri = Tasks.await(downloadUri!!)
         Log.i("URL", resultUri.toString())
+        genereteSnackbar("Upload da imagem concluido", Snackbar.LENGTH_SHORT)
+    }
+
+    private fun genereteSnackbar(text: String, snackbarTimer: Int) {
+        Snackbar.make(window.decorView.rootView, text,
+                snackbarTimer).show()
     }
 }

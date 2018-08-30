@@ -10,6 +10,8 @@ class Item() : Comparable<Item> {
     var uuid: String = ""
     var checked: Boolean = false
     var imageUri: String? = null
+    var quantity: Int? = null
+    var price: Double? = null
 
     constructor(name: String, description: String?, imageUri: String?) : this() {
         this.name = name

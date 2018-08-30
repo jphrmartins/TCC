@@ -13,7 +13,6 @@ import br.com.galaga.assistentescompras.adapter.MarketListAdapter
 import br.com.galaga.assistentescompras.adapter.SwipeHandler
 import br.com.galaga.assistentescompras.permission.manager.PermissionAsker
 import br.com.galaga.assistentescompras.permission.manager.permissions.CameraPermissions
-import br.com.galaga.assistentescompras.permission.manager.permissions.InternetPermissions
 import br.com.galaga.assistentescompras.permission.manager.permissions.StoragePermissions
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.database.DataSnapshot
@@ -28,12 +27,6 @@ import org.jetbrains.anko.doAsync
 
 class MainActivity : AppCompatActivity() {
 
-    companion object {
-        val CAMERA_PERMISSION_CODE = 0
-        val INTERNET_PERMISSION_CODE = 1
-        val STORAGE_PERMISSION_CODE = 2
-    }
-
     var database = FirebaseDatabase.getInstance()
     val myRef = database.getReference("listaItens")
     val myStorage = FirebaseStorage.getInstance().getReference()
@@ -44,7 +37,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
         askPermissions()
-        this.adapter = MarketListAdapter(baseContext)
+        this.adapter = MarketListAdapter(this)
 
         val recyclerView = recyclerView
         recyclerView.adapter = adapter
@@ -62,16 +55,16 @@ class MainActivity : AppCompatActivity() {
 
         myRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                var counter = 1
-                adapter.let {
-                    it.itens = dataSnapshot.children.mapNotNull {
-                        it.getValue(Item::class.java)?.let {
-                            it.position = counter++
-                            it
-                        }
-                    }.sorted()
-                    it.notifyDataSetChanged()
-                }
+                val itens = dataSnapshot.children.mapIndexedNotNull { index, dataSnapshot ->
+                    dataSnapshot.getValue(Item::class.java)?.let {
+                        it.position = index + 1
+                        it
+                    }
+                }.sorted()
+                adapter.itens = itens
+                adapter.notifyDataSetChanged()
+                val totalPrice = "R\$ ${calculateTotalPrice(itens)}"
+                price.text = totalPrice
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -86,11 +79,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun calculateTotalPrice(itens: List<Item>): String {
+        return itens
+                .filter { it.checked }
+                .map {
+                    it.price!! * it.quantity!!
+                }
+                .sum()
+                .toString()
+    }
+
     private fun askPermissions() {
-        PermissionAsker(listOf(
-                CameraPermissions(CAMERA_PERMISSION_CODE, this, baseContext),
-                InternetPermissions(INTERNET_PERMISSION_CODE, this, baseContext),
-                StoragePermissions(STORAGE_PERMISSION_CODE, this, baseContext)
+        PermissionAsker(this, listOf(
+                CameraPermissions(baseContext),
+                StoragePermissions(baseContext)
         )).askPermitions()
     }
 

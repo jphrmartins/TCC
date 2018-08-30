@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">AssistentesCompras</string>
+    <string name="app_name">Assistente Compras</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_add_item">AddItemActivity</string>
     <string name="title_activity_main2">Main2Activity</string>

@@ -6,11 +6,9 @@ import android.content.pm.PackageManager
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 
-class CameraPermissions(private val permissionCode: Int,
-                        private val activity: Activity,
-                        private val context: Context) : AppPermissions {
-    override fun askPermission() {
-        ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.CAMERA), permissionCode)
+class CameraPermissions(private val context: Context) : AppPermissions {
+    override fun permissionType(): String {
+        return android.Manifest.permission.CAMERA
     }
 
     override fun shouldAskPermission(): Boolean {
