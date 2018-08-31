@@ -27,10 +27,9 @@
             <ImageView
                 android:id="@+id/image"
                 android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_height="264dp"
                 android:contentDescription="ItemFoto"
                 android:scaleType="centerCrop"
-                app:layout_constraintDimensionRatio="w,1:1"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.4"
                 app:layout_constraintStart_toStartOf="parent"
@@ -40,7 +39,7 @@
             <LinearLayout
                 android:id="@+id/linearLayout"
                 android:layout_width="0dp"
-                android:layout_height="47dp"
+                android:layout_height="17dp"
                 android:background="@drawable/gradient_background"
                 android:focusableInTouchMode="true"
                 android:orientation="vertical"
@@ -48,46 +47,25 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent">
 
-                <EditText
-                    android:id="@+id/edtNome"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="bottom|start"
-                    android:ems="10"
-                    android:hint="Nome do Produto"
-                    android:inputType="textPersonName"
-                    android:textColor="#ffffffff"
-                    android:textColorHint="#ccc"
-                    android:textStyle="bold" />
             </LinearLayout>
-
-            <TextView
-                android:id="@+id/txtDescription"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="16dp"
-                android:text="Descrição"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
 
             <EditText
                 android:id="@+id/edtDescription"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="8dp"
                 android:ems="10"
                 android:hint="Descrição"
                 android:inputType="textPersonName"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/txtDescription" />
+                app:layout_constraintTop_toBottomOf="@+id/edtName" />
 
             <Spinner
                 android:id="@+id/spinner"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="8dp"
                 android:gravity="center|end"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -97,7 +75,7 @@
                 android:id="@+id/edtPrice"
                 android:layout_width="0dp"
                 android:layout_height="39dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="8dp"
                 android:ems="10"
                 android:hint="Preço"
                 android:inputType="numberDecimal"
@@ -105,6 +83,18 @@
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/edtDescription" />
+
+            <EditText
+                android:id="@+id/edtName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:ems="10"
+                android:hint="Nome do Produto"
+                android:inputType="textPersonName"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/image" />
 
         </android.support.constraint.ConstraintLayout>
     </ScrollView>

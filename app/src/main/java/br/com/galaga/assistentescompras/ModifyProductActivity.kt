@@ -54,12 +54,12 @@ class ModifyProductActivity : AppCompatActivity() {
         if (intent.hasExtra("itemUpdate")) {
             val item = gson.fromJson(intent.getStringExtra("itemUpdate"), Item::class.java)
             loadImageIfContainsUrl(item)
-            edtNome.setText(item.name)
+            edtName.setText(item.name)
             edtDescription.setText(item.description)
         } else if (intent.hasExtra("itemSelected")) {
             val item = gson.fromJson(intent.getStringExtra("itemSelected"), Item::class.java)
             loadImageIfContainsUrl(item)
-            edtNome.setText(item.name)
+            edtName.setText(item.name)
             edtDescription.setText(item.description)
             spinner.visibility = View.VISIBLE
             edtPrice.visibility = View.VISIBLE
@@ -147,7 +147,7 @@ class ModifyProductActivity : AppCompatActivity() {
     private fun updateItem(jsonItem: String) {
         val item = gson.fromJson(jsonItem, Item::class.java)
         if (!validadeEdtNome()) {
-            edtNome.error = "Adicione um valor a nome de até 15 caracteres"
+            edtName.error = "Adicione um valor a nome de até 20 caracteres"
         } else {
             item.name = getTextEdtName()
             item.description = getTextDescription()
@@ -169,7 +169,7 @@ class ModifyProductActivity : AppCompatActivity() {
 
     private fun addItem() {
         if (!validadeEdtNome()) {
-            edtNome.error = "Adicione um valor a nome de até 15 caracteres"
+            edtName.error = "Adicione um valor a nome de até 20 caracteres"
         } else {
             if (this.downloadUri != null) {
                 if (!this.downloadUri?.isComplete!!) {
@@ -200,7 +200,7 @@ class ModifyProductActivity : AppCompatActivity() {
         return null
     }
 
-    private fun getTextEdtName() = edtNome.text.toString().trim().capitalize()
+    private fun getTextEdtName() = edtName.text.toString().trim().capitalize()
 
     private fun saveItem(item: Item) {
         myRef.push().key?.let {
@@ -210,7 +210,7 @@ class ModifyProductActivity : AppCompatActivity() {
     }
 
     private fun validadeEdtNome(): Boolean {
-        return if (!edtNome.text.trim().isEmpty()) edtNome.text.toString().length < 16 else false
+        return if (!edtName.text.trim().isEmpty()) edtName.text.toString().length < 21 else false
     }
 
     private fun takePicture() {
@@ -271,7 +271,6 @@ class ModifyProductActivity : AppCompatActivity() {
     }
 
     private fun genereteSnackbar(text: String, snackbarTimer: Int) {
-        val view = this.findViewById<View>(R.id.constraintLayout)
-        Snackbar.make(view, text, snackbarTimer).show()
+        Snackbar.make(constraintLayout, text, snackbarTimer).show()
     }
 }
