@@ -11,10 +11,12 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.Log
 import br.com.galaga.assistentescompras.adapter.MarketListAdapter
 import br.com.galaga.assistentescompras.adapter.SwipeHandler
+import br.com.galaga.assistentescompras.domain.Item
 import br.com.galaga.assistentescompras.permission.manager.PermissionAsker
 import br.com.galaga.assistentescompras.permission.manager.permissions.CameraPermissions
 import br.com.galaga.assistentescompras.permission.manager.permissions.StoragePermissions
 import com.google.android.gms.tasks.Tasks
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -30,7 +32,16 @@ class MainActivity : AppCompatActivity() {
     var database = FirebaseDatabase.getInstance()
     val myRef = database.getReference("listaItens")
     val myStorage = FirebaseStorage.getInstance().getReference()
+    val mAuth: FirebaseAuth = FirebaseAuth.getInstance()
     lateinit var adapter: MarketListAdapter
+
+    override fun onStart() {
+        if (mAuth.currentUser == null) {
+            val intent = Intent(baseContext, LoginActivity::class.java)
+            startActivity(intent)
+        }
+        super.onStart()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

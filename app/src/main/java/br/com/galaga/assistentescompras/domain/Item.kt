@@ -1,6 +1,4 @@
-package br.com.galaga.assistentescompras
-
-import android.net.Uri
+package br.com.galaga.assistentescompras.domain
 
 
 class Item() : Comparable<Item> {
