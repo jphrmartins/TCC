@@ -54,7 +54,11 @@
 
         <activity
             android:name=".LoginActivity"
-            android:label="Sign in"/>
+            android:label="Logar" />
+        <activity
+            android:name=".RegisterActivity"
+            android:label="Registrar"
+            />
     </application>
 
 </manifest>
