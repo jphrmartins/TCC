@@ -40,6 +40,7 @@ class ModifyProductActivity : AppCompatActivity() {
     private var downloadUri: Task<Uri>? = null
     private var currentPath: String? = null
     private var qtdSelected: Int? = null
+    private lateinit var familia: String
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,6 +49,7 @@ class ModifyProductActivity : AppCompatActivity() {
         createSpinner()
         image.setOnClickListener { takePicture() }
 
+        familia = intent.getStringExtra("familia")
         edtPrice.visibility = View.GONE
         if (intent.hasExtra("itemUpdate")) {
             val item = gson.fromJson(intent.getStringExtra("itemUpdate"), Item::class.java)
@@ -120,7 +122,7 @@ class ModifyProductActivity : AppCompatActivity() {
             item.price = edtPrice.text.toString().toDouble()
             item.quantity = qtdSelected
             item.checked = !item.checked
-            myRef.updateChildren(mapOf(item.uuid to item))
+            myRef.child(familia).updateChildren(mapOf(item.uuid to item))
             finish()
         }
     }
@@ -155,11 +157,11 @@ class ModifyProductActivity : AppCompatActivity() {
                     genereteSnackbar("Salvando imagem, por favor aguarde...", Snackbar.LENGTH_LONG)
                 } else {
                     item.imageUri = this.resultUri.toString()
-                    myRef.updateChildren(mapOf<String, Item>(item.uuid to item))
+                    myRef.child(familia).updateChildren(mapOf<String, Item>(item.uuid to item))
                     finish()
                 }
             } else {
-                myRef.updateChildren(mapOf<String, Item>(item.uuid to item))
+                myRef.child(familia).updateChildren(mapOf<String, Item>(item.uuid to item))
                 finish()
             }
         }
@@ -201,9 +203,9 @@ class ModifyProductActivity : AppCompatActivity() {
     private fun getTextEdtName() = edtName.text.toString().trim().capitalize()
 
     private fun saveItem(item: Item) {
-        myRef.push().key?.let {
+        myRef.child(familia).push().key?.let {
             item.uuid = it
-            myRef.child(it).setValue(item)
+            myRef.child(familia).child(it).setValue(item)
         }
     }
 

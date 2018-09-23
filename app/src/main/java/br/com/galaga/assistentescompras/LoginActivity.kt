@@ -3,11 +3,13 @@ package br.com.galaga.assistentescompras
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import android.widget.Toast
+import br.com.galaga.assistentescompras.domain.User
+import br.com.galaga.assistentescompras.permission.manager.PermissionAsker
+import br.com.galaga.assistentescompras.permission.manager.permissions.CameraPermissions
+import br.com.galaga.assistentescompras.permission.manager.permissions.StoragePermissions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -18,16 +20,24 @@ import kotlinx.android.synthetic.main.activity_login.*
 class LoginActivity : AppCompatActivity() {
     private val myAuth = FirebaseAuth.getInstance()
     private val database = FirebaseDatabase.getInstance()
-    private val myRef = database.getReference("users")
+    private val myUserRef = database.getReference("users")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        askPermissions()
         setContentView(R.layout.activity_login)
         txtRegister.setOnClickListener {
             val intent = Intent(baseContext, RegisterActivity::class.java)
             startActivity(intent)
             finish()
         }
+    }
+
+    private fun askPermissions() {
+        PermissionAsker(this, listOf(
+                CameraPermissions(baseContext),
+                StoragePermissions(baseContext)
+        )).askPermitions()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -42,7 +52,7 @@ class LoginActivity : AppCompatActivity() {
                     edtPassword.error = "Insira sua senha"
                     edtEmail.error = "Insira seu email"
                 } else {
-                    registerUser()
+                    logingUser()
                 }
                 true
             }
@@ -50,29 +60,33 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun registerUser() {
+    private fun logingUser() {
         val email = edtEmail.text.toString()
         val senha = edtPassword.text.toString()
         myAuth.signInWithEmailAndPassword(email, senha)
                 .addOnCompleteListener {
                     if (it.isSuccessful) {
-                        Toast.makeText(baseContext, "VER COMO FAZER PARA PEGAR OS DADOS DA FAMILIA", Toast.LENGTH_LONG).show()
+                        myUserRef.orderByKey().equalTo(myAuth.currentUser?.uid)
+                                .addListenerForSingleValueEvent(openMainActivity())
                     } else {
                         Toast.makeText(baseContext, "Usuario inexistente, por favor, cadastre-se", Toast.LENGTH_LONG).show()
                     }
                 }
     }
 
-//    fun registerUser() {
-//        val text = edtEmail.text.toString()
-//        myRef.orderByKey().equalTo("abacaxi").addListenerForSingleValueEvent(object: ValueEventListener{
-//            override fun onDataChange(dataSnapshot: DataSnapshot) {
-//                Log.i("DEEEEEBUUUUUUGG", dataSnapshot.exists().toString())
-//            }
-//
-//            override fun onCancelled(p0: DatabaseError) {
-//
-//            }
-//        })
-//    }
+    private fun openMainActivity(): ValueEventListener {
+        return object : ValueEventListener {
+            override fun onCancelled(p0: DatabaseError) {
+            }
+
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val user = snapshot.getValue(User::class.java)
+                val intent = Intent(baseContext, MainActivity::class.java)
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                intent.putExtra("familia", user?.family)
+                startActivity(intent)
+                finish()
+            }
+        }
+    }
 }

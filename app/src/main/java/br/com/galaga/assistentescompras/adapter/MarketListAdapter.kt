@@ -16,10 +16,10 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.item_component.view.*
 
-class MarketListAdapter(private val activity: Activity) : Adapter<MarketListAdapter.ViewHolder>() {
+class MarketListAdapter(private val activity: Activity, private val familia: String) : Adapter<MarketListAdapter.ViewHolder>() {
     var itens: List<Item> = listOf()
     private val database = FirebaseDatabase.getInstance()
-    private val myRef = database.getReference("listaItens")
+    private val myRef = database.getReference("listaItens/$familia")
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
 
@@ -40,7 +40,13 @@ class MarketListAdapter(private val activity: Activity) : Adapter<MarketListAdap
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bindView(baseContext: Context, item: Item) {
-            itemView.setOnLongClickListener { longClickListner(item) }
+            itemView.setOnClickListener {
+                val intent = Intent(activity.baseContext, ModifyProductActivity::class.java)
+                val jsonItem = Gson().toJson(item)
+                intent.putExtra("familia", familia)
+                intent.putExtra("itemUpdate", jsonItem)
+                activity.startActivity(intent)
+            }
 
             val title = itemView.txtItemTitle
             val description = itemView.txtItemDescription
@@ -72,6 +78,7 @@ class MarketListAdapter(private val activity: Activity) : Adapter<MarketListAdap
             val intent = Intent(activity.baseContext, ModifyProductActivity::class.java)
             if (!item.checked) {
                 val jsonItem = Gson().toJson(item)
+                intent.putExtra("familia", familia)
                 intent.putExtra("itemSelected", jsonItem)
                 activity.startActivity(intent)
             } else {
@@ -80,14 +87,6 @@ class MarketListAdapter(private val activity: Activity) : Adapter<MarketListAdap
                 item.quantity = null
                 myRef.updateChildren(mapOf(item.uuid to item))
             }
-        }
-
-        private fun longClickListner(item: Item): Boolean {
-            val intent = Intent(activity.baseContext, ModifyProductActivity::class.java)
-            val jsonItem = Gson().toJson(item)
-            intent.putExtra("itemUpdate", jsonItem)
-            activity.startActivity(intent)
-            return true
         }
     }
 }

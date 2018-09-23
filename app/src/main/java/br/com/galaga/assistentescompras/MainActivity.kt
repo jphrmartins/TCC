@@ -12,9 +12,7 @@ import android.util.Log
 import br.com.galaga.assistentescompras.adapter.MarketListAdapter
 import br.com.galaga.assistentescompras.adapter.SwipeHandler
 import br.com.galaga.assistentescompras.domain.Item
-import br.com.galaga.assistentescompras.permission.manager.PermissionAsker
-import br.com.galaga.assistentescompras.permission.manager.permissions.CameraPermissions
-import br.com.galaga.assistentescompras.permission.manager.permissions.StoragePermissions
+import br.com.galaga.assistentescompras.domain.User
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -30,64 +28,81 @@ import org.jetbrains.anko.doAsync
 class MainActivity : AppCompatActivity() {
 
     var database = FirebaseDatabase.getInstance()
-    val myRef = database.getReference("listaItens")
+    val myListRef = database.getReference("listaItens")
+    val myUserRef = database.getReference("users")
     val myStorage = FirebaseStorage.getInstance().getReference()
     val mAuth: FirebaseAuth = FirebaseAuth.getInstance()
     lateinit var adapter: MarketListAdapter
-
-    override fun onStart() {
-        if (mAuth.currentUser == null) {
-            val intent = Intent(baseContext, LoginActivity::class.java)
-            startActivity(intent)
-        }
-        super.onStart()
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        askPermissions()
-        this.adapter = MarketListAdapter(this)
+    }
 
-        val recyclerView = recyclerView
-        recyclerView.adapter = adapter
-        val layoutManager = LinearLayoutManager(baseContext, LinearLayoutManager.VERTICAL, false)
-        recyclerView.layoutManager = layoutManager
-        recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
-
-        val swipeHandler = object : SwipeHandler() {
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
-                removeItem(viewHolder)
-            }
-        }
-        val itemTouchHelper = ItemTouchHelper(swipeHandler)
-        itemTouchHelper.attachToRecyclerView(recyclerView)
-
-        myRef.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val itens = dataSnapshot.children.mapIndexedNotNull { index, dataSnapshot ->
-                    dataSnapshot.getValue(Item::class.java)?.let {
-                        it.position = index + 1
-                        it
-                    }
-                }.sorted()
-                adapter.itens = itens
-                adapter.notifyDataSetChanged()
-                val totalPrice = "R\$ ${calculateTotalPrice(itens)}"
-                price.text = totalPrice
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // Failed to read value
-                Log.w("Warning", "Failed to read value.", error.toException())
-            }
-        })
-
-        fab.setOnClickListener { view ->
-            val intent = Intent(baseContext, ModifyProductActivity::class.java)
+    override fun onStart() {
+        if (mAuth.currentUser == null) {
+            val intent = Intent(baseContext, LoginActivity::class.java)
             startActivity(intent)
+            finish()
+        } else {
+            val uuid = mAuth.currentUser!!.uid
+            setOnStartExecution(uuid)
         }
+        super.onStart()
+    }
+
+    private fun setOnStartExecution(uuid: String) {
+        myUserRef.orderByKey().equalTo(uuid)
+                .addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val user = snapshot.child(uuid).getValue(User::class.java)
+                        val family = user?.family!!
+                        adapter = MarketListAdapter(this@MainActivity, family)
+                        val recyclerView = recyclerView
+                        recyclerView.adapter = adapter
+                        val layoutManager = LinearLayoutManager(baseContext, LinearLayoutManager.VERTICAL, false)
+                        recyclerView.layoutManager = layoutManager
+                        recyclerView.addItemDecoration(DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL))
+
+                        val swipeHandler = object : SwipeHandler() {
+                            override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
+                                removeItem(viewHolder, family)
+                            }
+                        }
+                        val itemTouchHelper = ItemTouchHelper(swipeHandler)
+                        itemTouchHelper.attachToRecyclerView(recyclerView)
+
+                        myListRef.child(family).addValueEventListener(object : ValueEventListener {
+                            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                val itens = dataSnapshot.children.mapIndexedNotNull { index, dataSnapshot ->
+                                    dataSnapshot.getValue(Item::class.java)?.let {
+                                        it.position = index + 1
+                                        it
+                                    }
+                                }.sorted()
+                                adapter.itens = itens
+                                adapter.notifyDataSetChanged()
+                                val totalPrice = "R\$ ${calculateTotalPrice(itens)}"
+                                price.text = totalPrice
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+                                // Failed to read value
+                                Log.w("Warning", "Failed to read value.", error.toException())
+                            }
+                        })
+
+                        fab.setOnClickListener { view ->
+                            val intent = Intent(baseContext, ModifyProductActivity::class.java)
+                            intent.putExtra("familia", family)
+                            startActivity(intent)
+                        }
+                    }
+
+                    override fun onCancelled(p0: DatabaseError) {
+                    }
+                })
     }
 
     private fun calculateTotalPrice(itens: List<Item>): String {
@@ -100,17 +115,10 @@ class MainActivity : AppCompatActivity() {
                 .toString()
     }
 
-    private fun askPermissions() {
-        PermissionAsker(this, listOf(
-                CameraPermissions(baseContext),
-                StoragePermissions(baseContext)
-        )).askPermitions()
-    }
-
-    private fun removeItem(viewHolder: RecyclerView.ViewHolder?) {
+    private fun removeItem(viewHolder: RecyclerView.ViewHolder?, family: String) {
         val item = adapter.itens.get(viewHolder!!.adapterPosition)
         doAsync { deleteImage(item.imageUri) }
-        myRef.child(item.uuid).removeValue()
+        myListRef.child(family).child(item.uuid).setValue(null)
     }
 
     private fun deleteImage(stringUri: String?) {
