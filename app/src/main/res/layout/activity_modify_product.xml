@@ -27,7 +27,7 @@
             <ImageView
                 android:id="@+id/image"
                 android:layout_width="0dp"
-                android:layout_height="264dp"
+                android:layout_height="276dp"
                 android:contentDescription="ItemFoto"
                 android:scaleType="centerCrop"
                 app:layout_constraintEnd_toEndOf="parent"
